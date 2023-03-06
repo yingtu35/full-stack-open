@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const Filter = ({value, onValueChange}) => <div>filter shown with<input value={value} onChange={onValueChange}/></div>
 const PersonForm = (props) => {
@@ -19,12 +20,7 @@ const PersonForm = (props) => {
 const Persons = ({persons}) => persons.map(person => <p key={person.id}>{person.name} {person.number}</p>)
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [query, setQuery] = useState('')
@@ -46,7 +42,25 @@ const App = () => {
     setPersons(persons.concat(new_person));
     setNewName('');
     setNewNumber('');
+
+    axios
+      .post("http://localhost:3001/persons", new_person)
+      .then(response => {
+        console.log(response);
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/persons")
+      .then(response => {
+        const persons = response.data;
+        setPersons(persons);
+      })
+  }, [])
   return (
     <div>
       <h2>Phonebook</h2>
