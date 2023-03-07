@@ -1,38 +1,8 @@
 import { useState, useEffect } from 'react'
+import Filter from './components/Filter'
+import Persons from './components/Persons'
+import PersonForm from './components/PersonForm'
 import PersonsService from './services/PersonsService'
-
-const Filter = ({value, onValueChange}) => <div>filter shown with<input value={value} onChange={onValueChange}/></div>
-const PersonForm = (props) => {
-  return (
-    <form onSubmit={props.onSubmit}>
-      <div>
-        name: <input value={props.name} onChange={props.onNameChange} />
-      </div>
-      <div>
-        number: <input value={props.number} onChange={props.onNumberChange} />
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  )
-}
-const Person = ({name, number, deletePerson}) => {
-  return (
-    <p>
-      {name} 
-      {number} 
-      <button onClick={deletePerson}>delete</button>
-    </p>
-  )
-}
-const Persons = ({persons, deletePerson}) => persons.map(person => 
-  <Person key={person.id} 
-          name={person.name} 
-          number={person.number} 
-          deletePerson={() => deletePerson(person)} 
-  />
-)
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -43,6 +13,21 @@ const App = () => {
   const query_function = (element) => element.name.toLowerCase().includes(query.toLowerCase());
   const filtered_persons = persons.filter(person => query_function(person));
 
+  const updatePerson = (person) => {
+    const id = person.id;
+    const updatedPerson = {
+      ...person,
+      number: newNumber
+    }
+    PersonsService
+      .update(id, updatedPerson)
+      .then(returnedPerson => {
+        setPersons(persons.map(person => person.id !== id? person : returnedPerson))
+        setNewName('');
+        setNewNumber('');
+      })
+      .catch(error => console.log(error))
+  }
   const deletePerson = (person) => {
     const id = person.id;
     const confirm = window.confirm(`Delete ${person.name} ?`)
@@ -51,15 +36,17 @@ const App = () => {
     }
     PersonsService
       .remove(id)
-      .then(data => {
-        setPersons(persons.filter(person => person.id !== id));
-      })
+      .then(data => setPersons(persons.filter(person => person.id !== id)))
       .catch(error => console.log(error))
   }
   const addPerson = (e) => {
     e.preventDefault();
-    if (persons.some(person => person.name === newName)){
-      alert(`${newName} is already added to phonebook`);
+    
+    if (persons.some(person => person.name === newName) 
+        &&
+        window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
+      const person = persons.find(person => person.name === newName);
+      updatePerson(person);
       return;
     }
     const new_person = {
