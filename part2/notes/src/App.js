@@ -1,10 +1,27 @@
 import { useState, useEffect } from 'react'
 import Note from './components/Note'
-import axios from 'axios'
+import Notes from './services/Notes'
 
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
+
+  const toggleImportance = (note) => {
+    const id = note.id
+    const updateNote = {
+      ...note,
+      important: !note.important
+    }
+    Notes
+      .update(id, updateNote)
+      .then(returnedNote => {
+        setNotes(notes.map(note => note.id !== id? note: returnedNote))
+      })
+      .catch(error => {
+        alert(`The note: '${note.content}' is already deleted from the server.`);
+        setNotes(notes.filter(note => note.id !== id));
+      })
+  }
 
   const addNote = (event) => {
     event.preventDefault()
@@ -14,8 +31,12 @@ const App = () => {
       id: notes.length + 1,
     }
 
-    setNotes(notes.concat(noteObject))
-    setNewNote('')
+    Notes
+      .create(noteObject)
+      .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
+        setNewNote('')
+      })
   }
 
   const handleNoteChange = (event) => {
@@ -24,16 +45,13 @@ const App = () => {
   }
 
   useEffect(()=> {
-    axios
-      .get("http://localhost:3001/notes")
-      .then(response => {
-        const notes = response.data;
-        console.log(notes);
-        setNotes(notes);
+    Notes
+      .getAll()
+      .then(returnedNotes => {
+        setNotes(returnedNotes);
       })
     return () => {}
   }, [])
-  console.log('render', notes.length, 'notes')
 
   return (
     <div>
@@ -41,7 +59,10 @@ const App = () => {
       <ul>
         <ul>
           {notes.map(note => 
-            <Note key={note.id} note={note} />
+            <Note key={note.id} 
+                  note={note}
+                  toggleImportance={() => toggleImportance(note)} 
+            />
           )}
         </ul>
       </ul>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import PersonsService from './services/PersonsService'
 
 const Filter = ({value, onValueChange}) => <div>filter shown with<input value={value} onChange={onValueChange}/></div>
 const PersonForm = (props) => {
@@ -17,7 +17,22 @@ const PersonForm = (props) => {
     </form>
   )
 }
-const Persons = ({persons}) => persons.map(person => <p key={person.id}>{person.name} {person.number}</p>)
+const Person = ({name, number, deletePerson}) => {
+  return (
+    <p>
+      {name} 
+      {number} 
+      <button onClick={deletePerson}>delete</button>
+    </p>
+  )
+}
+const Persons = ({persons, deletePerson}) => persons.map(person => 
+  <Person key={person.id} 
+          name={person.name} 
+          number={person.number} 
+          deletePerson={() => deletePerson(person)} 
+  />
+)
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -28,6 +43,19 @@ const App = () => {
   const query_function = (element) => element.name.toLowerCase().includes(query.toLowerCase());
   const filtered_persons = persons.filter(person => query_function(person));
 
+  const deletePerson = (person) => {
+    const id = person.id;
+    const confirm = window.confirm(`Delete ${person.name} ?`)
+    if (!confirm){
+      return;
+    }
+    PersonsService
+      .remove(id)
+      .then(data => {
+        setPersons(persons.filter(person => person.id !== id));
+      })
+      .catch(error => console.log(error))
+  }
   const addPerson = (e) => {
     e.preventDefault();
     if (persons.some(person => person.name === newName)){
@@ -39,14 +67,13 @@ const App = () => {
       number: newNumber,
       id: persons.length + 1
     }
-    setPersons(persons.concat(new_person));
-    setNewName('');
-    setNewNumber('');
 
-    axios
-      .post("http://localhost:3001/persons", new_person)
-      .then(response => {
-        console.log(response);
+    PersonsService
+      .create(new_person)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson));
+        setNewName('');
+        setNewNumber('');
       })
       .catch(error => {
         console.log(error);
@@ -54,11 +81,10 @@ const App = () => {
   }
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then(response => {
-        const persons = response.data;
-        setPersons(persons);
+    PersonsService
+      .getAll()
+      .then(returnedPersons => {
+        setPersons(returnedPersons);
       })
   }, [])
   return (
@@ -73,7 +99,7 @@ const App = () => {
                   onSubmit={addPerson} 
       />
       <h2>Numbers</h2>
-      <Persons persons={filtered_persons} />
+      <Persons persons={filtered_persons} deletePerson={deletePerson} />
     </div>
   )
 }
