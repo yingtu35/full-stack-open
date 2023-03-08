@@ -3,6 +3,7 @@ import Filter from './components/Filter'
 import Persons from './components/Persons'
 import PersonForm from './components/PersonForm'
 import PersonsService from './services/PersonsService'
+import Notification from './components/Notification'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -10,10 +11,27 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [query, setQuery] = useState('')
 
+  const [message, setMessage] = useState(null);
+  const [isError, setIsError] = useState(false);
+
   const query_function = (element) => element.name.toLowerCase().includes(query.toLowerCase());
   const filtered_persons = persons.filter(person => query_function(person));
 
+  const changeMessage = (message, error) => {
+    setMessage(message)
+    setIsError(error);
+    setTimeout(()=> {
+      setMessage(null);
+      setIsError(false);
+    }, 5000)
+  }
   const updatePerson = (person) => {
+    if (!newNumber) {
+      const message = 'Blank number is invalid';
+      changeMessage(message, true);
+      return;
+    }
+
     const id = person.id;
     const updatedPerson = {
       ...person,
@@ -25,8 +43,15 @@ const App = () => {
         setPersons(persons.map(person => person.id !== id? person : returnedPerson))
         setNewName('');
         setNewNumber('');
+        const message = `Updated ${returnedPerson.name}`;
+        changeMessage(message, false);
       })
-      .catch(error => console.log(error))
+      .catch(error => {
+        console.log(error);
+        const message = `Information of ${updatedPerson.name} has already been removed from server`;
+        changeMessage(message, true);
+        setPersons(persons.filter(person => person.id !== id))
+      })
   }
   const deletePerson = (person) => {
     const id = person.id;
@@ -36,11 +61,31 @@ const App = () => {
     }
     PersonsService
       .remove(id)
-      .then(data => setPersons(persons.filter(person => person.id !== id)))
-      .catch(error => console.log(error))
+      .then(data => {
+        setPersons(persons.filter(person => person.id !== id))
+        const message = `Deleted ${person.name}`;
+        changeMessage(message, false);
+      })
+      .catch(error => {
+        console.log(error);
+        const message = `Information of ${person.name} has already been removed from server`;
+        changeMessage(message, true);
+        setPersons(persons.filter(person => person.id !== id))
+      })
   }
   const addPerson = (e) => {
     e.preventDefault();
+
+    if (!newName) {
+      const message = 'Blank name is invalid';
+      changeMessage(message, true);
+      return;
+    }
+    if (!newNumber) {
+      const message = 'Blank number is invalid';
+      changeMessage(message, true);
+      return;
+    }
     
     if (persons.some(person => person.name === newName) 
         &&
@@ -61,6 +106,8 @@ const App = () => {
         setPersons(persons.concat(returnedPerson));
         setNewName('');
         setNewNumber('');
+        const message = `Added ${returnedPerson.name}`;
+        changeMessage(message, false);
       })
       .catch(error => {
         console.log(error);
@@ -79,6 +126,7 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter value={query} onValueChange={(e) => setQuery(e.target.value)} />
       <h2>add a new</h2>
+      <Notification message={message} isError={isError} />
       <PersonForm name={newName} 
                   number={newNumber}
                   onNameChange={(e) => setNewName(e.target.value)}

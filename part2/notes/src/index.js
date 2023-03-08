@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom/client"
-
+import "./index.css"
 import App from "./App"
 
 // const promise2 = axios.get('http://localhost:3001/foobar')
