@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "rm -rf build && cd ../notes && npm run build && copy -r build ../part3",
+    "deploy": "fly deploy",
+    "deploy:full": "npm run build:ui && npm run deploy",
+    "logs:prod": "fly logs"
+  },
+  "author": "Ying Tu",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.36.0",
+    "eslint-plugin-react": "^7.32.2",
+    "nodemon": "^2.0.21"
+  }
+}

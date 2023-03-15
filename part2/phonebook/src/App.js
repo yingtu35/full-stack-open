@@ -13,6 +13,7 @@ const App = () => {
 
   const [message, setMessage] = useState(null);
   const [isError, setIsError] = useState(false);
+  const [timeoutID, setTimeoutID] = useState(null);
 
   const query_function = (element) => element.name.toLowerCase().includes(query.toLowerCase());
   const filtered_persons = persons.filter(person => query_function(person));
@@ -20,10 +21,12 @@ const App = () => {
   const changeMessage = (message, error) => {
     setMessage(message)
     setIsError(error);
-    setTimeout(()=> {
-      setMessage(null);
-      setIsError(false);
-    }, 5000)
+    clearTimeout(timeoutID)
+    const newTimeoutID = setTimeout(()=> {
+                      setMessage(null);
+                      setIsError(false);
+                    }, 5000)
+    setTimeoutID(newTimeoutID)
   }
   const updatePerson = (person) => {
     if (!newNumber) {
@@ -48,9 +51,20 @@ const App = () => {
       })
       .catch(error => {
         console.log(error);
-        const message = `Information of ${updatedPerson.name} has already been removed from server`;
-        changeMessage(message, true);
-        setPersons(persons.filter(person => person.id !== id))
+        const status = error.response.status;
+        const errorMsg = error.response.data.error;
+        if (status === 404) {
+          const message = `Information of ${updatedPerson.name} has already been removed from server`;
+          changeMessage(message, true);
+          setPersons(persons.filter(person => person.id !== id))
+        }
+        else if (status === 400) {
+          changeMessage(errorMsg, true);
+        }
+        else {
+          const message = `Unexpected error. Please try again later`;
+          changeMessage(message, true);
+        }
       })
   }
   const deletePerson = (person) => {
@@ -110,7 +124,8 @@ const App = () => {
         changeMessage(message, false);
       })
       .catch(error => {
-        console.log(error);
+        const errorMsg = error.response.data.error;
+        changeMessage(errorMsg, true);
       });
   }
 
@@ -133,6 +148,14 @@ const App = () => {
                   onNumberChange={(e) => setNewNumber(e.target.value)}
                   onSubmit={addPerson} 
       />
+      <h3>*Rules for adding new numbers:*</h3>
+      <ul>
+        <li>Both name and number are required</li>
+        <li>Name must be at least 3 characters long</li>
+        <li>Number must be at length of 8 or more</li>
+        <li>If number is separated by "-", first part must be 2 or 3 numbers</li>
+        <li>Example of valid numbers: 09-1234556, 040-223344, 12345678</li>
+      </ul>
       <h2>Numbers</h2>
       <Persons persons={filtered_persons} deletePerson={deletePerson} />
     </div>
