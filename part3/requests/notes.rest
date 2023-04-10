@@ -19,11 +19,10 @@ DELETE http://localhost:3001/api/notes/640ff24b5e1b107f7d42e487
 GET http://localhost:3001/api/notes/5c41c90e84d891c15dfa3431
 
 ###
-PUT http://localhost:3001/api/notes/5c41c90e84d891c15dfa3431
+PUT http://localhost:3001/api/notes/6411675d68150a0d38241099
 Content-Type: application/json
 
 {
-    "content": "This note does not exist",
     "important": true
 }
 

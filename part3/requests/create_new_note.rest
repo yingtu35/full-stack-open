@@ -3,7 +3,9 @@ GET http://localhost:3001/api/notes
 ###
 POST http://localhost:3001/api/notes
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRhbmllbCIsIm5hbWUiOiJZaW5nIFR1IiwiaWQiOiI2NDE5NzBhZmNhODZiNjI5MTE5ZTcyM2MiLCJpYXQiOjE2Nzk0NzE4NjcsImV4cCI6MTY3OTQ3NTQ2N30.YzmjWQRmaIEnNDdFo-a6HMlqLv2wtDgFp28JK_UBjIk
 
 {
-    "content": "3"
+    "content": "drink water",
+    "important": false
 }
