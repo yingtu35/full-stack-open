@@ -1,53 +1,50 @@
+import { createSlice } from "@reduxjs/toolkit"
+import NoteService from "../services/NoteService"
+
 export const generateId = () => Number((Math.random() * 1000000).toFixed(0))
 
-// Action creators
-export const createNote = (content) => {
-  return ({
-    type: "NEW NOTE",
-    payload: {
-      content: content,
-      important: false,
-      id: generateId()
+const initialState = []
+const noteSlice = createSlice({
+  name: "notes",
+  initialState,
+  reducers: {
+    appendNote(state, action) {
+      state.push(action.payload)
+    },
+    toggleImportanceOf(state, action) {
+      const updatedNote = action.payload
+      return state.map(note => note.id === updatedNote.id? updatedNote : note)
+    },
+    setNotes(state, action) {
+      return action.payload
     }
-  })
+  }
+})
+
+// automatically generate action creators through createSlice
+export const { appendNote, toggleImportanceOf, setNotes } = noteSlice.actions
+export const initializeNotes = () => {
+  // receive dispatch and getState as parameters
+  return async dispatch => {
+    // can do asynchronous dispatch
+    const notes = await NoteService.getAll()
+    dispatch(setNotes(notes))
+  }
 }
-
-export const toggleImportanceOf = (id) => {
-  return ({
-    type: "TOGGLE IMPORTANCE",
-    payload: { id }
-  })
+export const createNote = content => {
+  return async dispatch => {
+    const newNote = await NoteService.create(content)
+    dispatch(appendNote(newNote))
+  }
 }
-
-const initialState = [
-  {
-    content: 'reducer defines how redux store works',
-    important: true,
-    id: 1,
-  },
-  {
-    content: 'state of store can contain any data',
-    important: false,
-    id: 2,
-  },
-]
-
-const noteReducer = (state=initialState, action) => {
-    switch (action.type) {
-      case "NEW NOTE":
-        return [...state, action.payload]
-      case "TOGGLE IMPORTANCE":
-        const id = action.payload.id
-        const noteToChange = state.find(note => note.id === id)
-        const changedNote = {
-          ...noteToChange,
-          important: !noteToChange.important
-        }
-        const newState = state.map(note => note.id === id? changedNote : note)
-        return newState
-      default:
-        return state
+export const toggleImportance = note => {
+  return async dispatch => {
+    const updateNote = {
+      ...note,
+      important: !note.important
     }
+    const updatedNote = await NoteService.update(note.id, updateNote)
+    dispatch(toggleImportanceOf(updatedNote))
+  }
 }
-
-export default noteReducer
+export default noteSlice.reducer
