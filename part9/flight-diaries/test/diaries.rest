@@ -1,0 +1,15 @@
+GET http://localhost:3003/api/diaries
+
+###
+GET http://localhost:3003/api/diaries/6
+
+###
+POST http://localhost:3003/api/diaries
+Content-Type: application/json
+
+{
+  "date": "2023-06-30",
+  "weather": "sunny",
+  "visibility": "good",
+  "comment": "A nice day to stay at Louisa and learn TypeScript!"
+}
